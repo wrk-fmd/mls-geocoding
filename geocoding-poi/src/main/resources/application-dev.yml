@@ -1,0 +1,18 @@
+spring:
+  rabbitmq:
+    host: localhost
+    username: coceso-rabbitmq-user
+    password: coceso-rabbitmq-pass
+application:
+  geocoder:
+    priority:
+    requeue: true
+  poi:
+    sources:
+      ehs.json: EHS
+      hospitals.json:
+      wrk.json:
+logging:
+  level:
+    root: info
+    at.wrk.coceso: debug

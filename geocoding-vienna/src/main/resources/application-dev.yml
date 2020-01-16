@@ -1,0 +1,13 @@
+spring:
+  rabbitmq:
+    host: localhost
+    username: coceso-rabbitmq-user
+    password: coceso-rabbitmq-pass
+application:
+  geocoder:
+    priority: 2
+    requeue: true
+logging:
+  level:
+    root: info
+    at.wrk.coceso: debug

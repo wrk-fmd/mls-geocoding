@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+  coceso-geocoding-poi:
+    image: coceso/geocoding-poi:${COCESO_TAG:-latest}
+    build:
+      context: .
+      args:
+        MODULE: geocoding-poi
+        APP: geocoding-poi
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - type: bind
+        source: ${COCESO_GEOCODING_POI_CONFIG:-./geocoding-poi/src/main/resources}
+        target: /config
+        read_only: true
+      - type: bind
+        source: ${COCESO_LOG:-./log}
+        target: /log
+
+  coceso-geocoding-vienna:
+    image: coceso/geocoding-vienna:${COCESO_TAG:-latest}
+    build:
+      context: .
+      args:
+        MODULE: geocoding-vienna
+        APP: geocoding-vienna
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - type: bind
+        source: ${COCESO_GEOCODING_VIENNA_CONFIG:-./geocoding-vienna/src/main/resources}
+        target: /config
+        read_only: true
+      - type: bind
+        source: ${COCESO_LOG:-./log}
+        target: /log
+
+  coceso-geocoding-gmaps:
+    image: coceso/geocoding-gmaps:${COCESO_TAG:-latest}
+    build:
+      context: .
+      args:
+        MODULE: geocoding-gmaps
+        APP: geocoding-gmaps
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - type: bind
+        source: ${COCESO_GEOCODING_GMAPS_CONFIG:-./geocoding-gmaps/src/main/resources}
+        target: /config
+        read_only: true
+      - type: bind
+        source: ${COCESO_LOG:-./log}
+        target: /log
+
+  coceso-geocoding-intersection:
+    image: coceso/geocoding-gmaps:${COCESO_TAG:-latest}
+    build:
+      context: .
+      args:
+        MODULE: geocoding-gmaps
+        APP: geocoding-gmaps
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,intersection
+    volumes:
+      - type: bind
+        source: ${COCESO_GEOCODING_INTERSECTION_CONFIG:-./geocoding-gmaps/src/main/resources}
+        target: /config
+        read_only: true
+      - type: bind
+        source: ${COCESO_LOG:-./log}
+        target: /log
+
+networks:
+  default:
+    name: coceso-network

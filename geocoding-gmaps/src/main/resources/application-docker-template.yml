@@ -1,0 +1,19 @@
+# This profile uses the docker-compose DNS names and is activated for the default docker-compose build
+# Copy it to application-docker.yml and set the Google Maps API key
+
+spring:
+  rabbitmq:
+    host: coceso-amqp
+    username: coceso-rabbitmq-user
+    password: coceso-rabbitmq-pass
+application:
+  geocoder:
+    priority: 3
+    requeue: false
+  gmaps:
+    api-key: !!REQUIRED!!
+logging:
+  config: /config/log-docker.xml
+  level:
+    root: info
+    at.wrk.coceso: debug

@@ -1,0 +1,7 @@
+# This overrides some properties to switch to the intersection geocoder
+
+application:
+  geocoder:
+    priority: 1
+    requeue: true
+    type: intersection
