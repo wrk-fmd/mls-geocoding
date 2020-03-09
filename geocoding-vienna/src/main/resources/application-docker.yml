@@ -2,9 +2,9 @@
 
 spring:
   rabbitmq:
-    host: coceso-amqp
-    username: coceso-rabbitmq-user
-    password: coceso-rabbitmq-pass
+    host: mls-amqp
+    username: mls-rabbitmq-user
+    password: mls-rabbitmq-pass
 application:
   geocoder:
     priority: 2
@@ -13,4 +13,4 @@ logging:
   config: /config/log-docker.xml
   level:
     root: info
-    at.wrk.coceso: debug
+    at.wrk.fmd.mls: debug

@@ -5,18 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>at.wrk.coceso-geocoding</groupId>
+        <groupId>at.wrk.fmd.mls</groupId>
         <artifactId>geocoding-base</artifactId>
         <version>3.0.0-RELEASE</version>
     </parent>
 
     <artifactId>geocoding-vienna</artifactId>
-    <name>CoCeSo Geocoder using the City of Vienna OpenData API</name>
+    <name>Vienna OGD Geocoder</name>
+    <description>Geocoder using the City of Vienna OpenData API</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <!-- Worker application -->
         <dependency>
-            <groupId>at.wrk.coceso-geocoding</groupId>
+            <groupId>at.wrk.fmd.mls</groupId>
             <artifactId>geocoding-worker</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -25,14 +30,6 @@
         <dependency>
             <groupId>de.grundid.opendatalab</groupId>
             <artifactId>geojson-jackson</artifactId>
-            <version>${geojson.version}</version>
-        </dependency>
-
-        <!-- Spring Boot -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- Testing -->

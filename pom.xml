@@ -4,26 +4,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.1.RELEASE</version>
-        <relativePath/>
+        <groupId>at.wrk.fmd.mls</groupId>
+        <artifactId>mls-parent</artifactId>
+        <version>3.0.0-RELEASE</version>
     </parent>
 
-    <groupId>at.wrk.coceso-geocoding</groupId>
     <artifactId>geocoding-base</artifactId>
     <version>3.0.0-RELEASE</version>
     <packaging>pom</packaging>
-    <name>CoCeSo Geocoding Base module</name>
-
-    <properties>
-        <commons.text.version>1.8</commons.text.version>
-        <geojson.version>1.12</geojson.version>
-
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>11</java.version>
-        <maven.compiler.release>11</maven.compiler.release>
-    </properties>
+    <name>Geocoding Base module</name>
 
     <modules>
         <module>geocoding-api</module>
@@ -34,41 +23,10 @@
         <module>geocoding-transform</module>
     </modules>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-    <distributionManagement>
+    <repositories>
         <repository>
-            <id>bintray-wrk-fmd-mls-ecosystem</id>
-            <name>wrk-fmd-mls-ecosystem</name>
-            <url>https://api.bintray.com/maven/wrk-fmd/mls-ecosystem/${project.artifactId}/;publish=1</url>
+            <id>bintray-wrk-fmd</id>
+            <url>http://dl.bintray.com/wrk-fmd/mls-ecosystem</url>
         </repository>
-    </distributionManagement>
+    </repositories>
 </project>

@@ -5,18 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>at.wrk.coceso-geocoding</groupId>
+        <groupId>at.wrk.fmd.mls</groupId>
         <artifactId>geocoding-base</artifactId>
         <version>3.0.0-RELEASE</version>
     </parent>
 
     <artifactId>geocoding-poi</artifactId>
-    <name>CoCeSo Geocoder using the GeoJson POI data</name>
+    <name>GeoJson POI Geocoder</name>
+    <description>Geocoder using the GeoJson POI data</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <!-- Worker application -->
         <dependency>
-            <groupId>at.wrk.coceso-geocoding</groupId>
+            <groupId>at.wrk.fmd.mls</groupId>
             <artifactId>geocoding-worker</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -25,14 +30,6 @@
         <dependency>
             <groupId>de.grundid.opendatalab</groupId>
             <artifactId>geojson-jackson</artifactId>
-            <version>${geojson.version}</version>
-        </dependency>
-
-        <!-- Spring Boot -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- Testing -->
@@ -48,6 +45,20 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>${spring.boot.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
         </plugins>
     </build>

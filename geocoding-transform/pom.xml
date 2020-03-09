@@ -5,18 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>at.wrk.coceso-geocoding</groupId>
+        <groupId>at.wrk.fmd.mls</groupId>
         <artifactId>geocoding-base</artifactId>
         <version>3.0.0-RELEASE</version>
     </parent>
 
     <artifactId>geocoding-transform</artifactId>
-    <name>A simple app for transforming the old POI format to GeoJson</name>
+    <name>Geocoding Transformer App</name>
+    <description>A simple app for transforming the old POI format to GeoJson</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <!-- DTOs -->
         <dependency>
-            <groupId>at.wrk.coceso-geocoding</groupId>
+            <groupId>at.wrk.fmd.mls</groupId>
             <artifactId>geocoding-api</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -25,7 +30,6 @@
         <dependency>
             <groupId>de.grundid.opendatalab</groupId>
             <artifactId>geojson-jackson</artifactId>
-            <version>${geojson.version}</version>
         </dependency>
     </dependencies>
 </project>

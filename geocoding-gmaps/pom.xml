@@ -5,22 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>at.wrk.coceso-geocoding</groupId>
+        <groupId>at.wrk.fmd.mls</groupId>
         <artifactId>geocoding-base</artifactId>
         <version>3.0.0-RELEASE</version>
     </parent>
 
     <artifactId>geocoding-gmaps</artifactId>
-    <name>CoCeSo Geocoder using the Google Maps API</name>
+    <name>Google Maps Geocoder</name>
+    <description>Geocoder using the Google Maps API</description>
 
     <properties>
-        <google.maps.version>0.10.2</google.maps.version>
+        <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
     <dependencies>
         <!-- Worker application -->
         <dependency>
-            <groupId>at.wrk.coceso-geocoding</groupId>
+            <groupId>at.wrk.fmd.mls</groupId>
             <artifactId>geocoding-worker</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -29,14 +30,6 @@
         <dependency>
             <groupId>com.google.maps</groupId>
             <artifactId>google-maps-services</artifactId>
-            <version>${google.maps.version}</version>
-        </dependency>
-
-        <!-- Spring Boot -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- Testing -->
@@ -52,6 +45,20 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>${spring.boot.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
         </plugins>
     </build>

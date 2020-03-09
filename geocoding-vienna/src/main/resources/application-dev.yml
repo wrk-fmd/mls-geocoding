@@ -1,8 +1,8 @@
 spring:
   rabbitmq:
     host: localhost
-    username: coceso-rabbitmq-user
-    password: coceso-rabbitmq-pass
+    username: mls-rabbitmq-user
+    password: mls-rabbitmq-pass
 application:
   geocoder:
     priority: 2
@@ -10,4 +10,4 @@ application:
 logging:
   level:
     root: info
-    at.wrk.coceso: debug
+    at.wrk.fmd.mls: debug
