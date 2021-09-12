@@ -1,9 +1,9 @@
 package at.wrk.fmd.mls.geocoding.vienna;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import at.wrk.fmd.mls.geocoding.api.dto.AddressResult;
 import at.wrk.fmd.mls.geocoding.api.dto.GeocodingRequest;
@@ -11,15 +11,15 @@ import at.wrk.fmd.mls.geocoding.api.dto.GeocodingResult;
 import at.wrk.fmd.mls.geocoding.api.dto.LatLng;
 import at.wrk.fmd.mls.geocoding.config.MessageBrokerConfiguration;
 import at.wrk.fmd.mls.geocoding.service.GeocodingRequestListener;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 // TODO Just inject what is really needed
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @MockBean({GeocodingRequestListener.class, MessageBrokerConfiguration.class})
 public class ViennaGeocoderTest {
@@ -70,21 +70,21 @@ public class ViennaGeocoderTest {
         AddressResult result;
 
         result = geocoder.reverse(new LatLng(48.202813, 16.342256));
-        assertNotNull("Expected a result at Kandlgasse, 1070", result);
+        assertNotNull(result, "Expected a result at Kandlgasse, 1070");
         assertEquals("Kandlgasse", result.getAddress().getStreet());
-        assertNotNull("Expected a post code at Kandlgasse, 1070", result.getAddress().getPostCode());
+        assertNotNull(result.getAddress().getPostCode(), "Expected a post code at Kandlgasse, 1070");
         assertEquals(1070, (int) result.getAddress().getPostCode());
         Integer number = result.getAddress().getNumber().getFrom();
-        assertNotNull("Expected a number at Kandlgasse, 1070", number);
-        assertTrue("Expected number to be in range 19-24", number >= 19 && number <= 24);
+        assertNotNull(number, "Expected a number at Kandlgasse, 1070");
+        assertTrue(number >= 19 && number <= 24, "Expected number to be in range 19-24");
 
         result = geocoder.reverse(new LatLng(48.32, 16.19));
-        assertNotNull("Expected a result near the border of Vienna", result);
-        assertNotNull("Expected a post code for request outside of Vienna", result.getAddress().getPostCode());
+        assertNotNull(result, "Expected a result near the border of Vienna");
+        assertNotNull(result.getAddress().getPostCode(), "Expected a post code for request outside of Vienna");
         assertEquals(1140, (int) result.getAddress().getPostCode());
 
         result = geocoder.reverse(new LatLng(48.18, 16.10));
-        assertNull("Expected no result for request at Pressbaum", result);
+        assertNull(result, "Expected no result for request at Pressbaum");
     }
 
     private GeocodingRequest createRequest(final String street, final String number, final Integer postCode, final String city) {
