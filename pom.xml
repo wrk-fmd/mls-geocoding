@@ -6,7 +6,8 @@
     <parent>
         <groupId>at.wrk.fmd.mls</groupId>
         <artifactId>mls-parent</artifactId>
-        <version>3.0.0-RELEASE</version>
+        <version>3.0.3-RELEASE</version>
+        <relativePath/>
     </parent>
 
     <artifactId>geocoding-base</artifactId>
@@ -22,11 +23,4 @@
         <module>geocoding-gmaps</module>
         <module>geocoding-transform</module>
     </modules>
-
-    <repositories>
-        <repository>
-            <id>bintray-wrk-fmd</id>
-            <url>http://dl.bintray.com/wrk-fmd/mls-ecosystem</url>
-        </repository>
-    </repositories>
 </project>

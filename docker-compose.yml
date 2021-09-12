@@ -8,6 +8,7 @@ services:
       args:
         MODULE: geocoding-poi
         APP: geocoding-poi
+      network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker
     volumes:
@@ -26,6 +27,7 @@ services:
       args:
         MODULE: geocoding-vienna
         APP: geocoding-vienna
+      network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker
     volumes:
@@ -44,6 +46,7 @@ services:
       args:
         MODULE: geocoding-gmaps
         APP: geocoding-gmaps
+      network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker
     volumes:
@@ -62,6 +65,7 @@ services:
       args:
         MODULE: geocoding-gmaps
         APP: geocoding-gmaps
+      network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker,intersection
     volumes:
