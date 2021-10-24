@@ -1,6 +1,9 @@
 spring:
   profiles:
     active: dev
+application:
+  geocoder:
+    name: poi
 logging:
   level:
     root: warn

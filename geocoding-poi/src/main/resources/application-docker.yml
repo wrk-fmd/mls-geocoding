@@ -7,8 +7,7 @@ spring:
     password: mls-rabbitmq-pass
 application:
   geocoder:
-    priority:
-    requeue: true
+    priority: 1
   poi:
     sources:
       '[file:/config/ehs.json]': EHS

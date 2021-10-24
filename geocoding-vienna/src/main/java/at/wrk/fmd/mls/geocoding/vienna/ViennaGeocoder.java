@@ -1,15 +1,16 @@
 package at.wrk.fmd.mls.geocoding.vienna;
 
 import at.wrk.fmd.mls.geocoding.api.dto.Address;
-import at.wrk.fmd.mls.geocoding.api.dto.AddressResult;
-import at.wrk.fmd.mls.geocoding.api.dto.GeocodingRequest;
+import at.wrk.fmd.mls.geocoding.api.dto.Address.AddressBuilder;
 import at.wrk.fmd.mls.geocoding.api.dto.LatLng;
+import at.wrk.fmd.mls.geocoding.api.dto.PointDto;
 import at.wrk.fmd.mls.geocoding.service.Geocoder;
 import at.wrk.fmd.mls.geocoding.util.AddressMatcher;
 import at.wrk.fmd.mls.geocoding.util.AddressParser;
 import at.wrk.fmd.mls.geocoding.util.LatLngBounds;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
+import org.geojson.GeoJsonObject;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import java.lang.invoke.MethodHandles;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ViennaGeocoder implements Geocoder {
@@ -42,9 +44,17 @@ public class ViennaGeocoder implements Geocoder {
     }
 
     @Override
-    public AddressResult geocode(GeocodingRequest request) {
-        Address address = AddressParser.parseFromString(request.getText());
+    public List<PointDto> geocode(PointDto request) {
+        if (request.getCoordinates() != null || request.getPoi() != null) {
+            // We already have coordinates or a POI, don't need to look anymore
+            return null;
+        }
+
+        PointDto parsed = AddressParser.parseAddress(request);
+        Address address = parsed.getAddress();
         if (address == null) {
+            // No address parsed from given data
+            LOG.trace("Point does not represent an address. Point: {}", parsed);
             return null;
         }
 
@@ -53,9 +63,13 @@ public class ViennaGeocoder implements Geocoder {
             return null;
         }
 
+        if (address.getIntersection() != null) {
+            LOG.trace("Vienna Geocoder is not applicable if intersection is queried. Address: {}", address);
+            return null;
+        }
+
         if (address.getPostCode() != null && (address.getPostCode() < 1000 || address.getPostCode() > 1300)) {
-            LOG.trace("Vienna Geocoder is not applicable if the postal code is outside of Vienna. Address: {}",
-                    address);
+            LOG.trace("Vienna Geocoder is not applicable if the postal code is outside of Vienna. Address: {}", address);
             return null;
         }
 
@@ -64,7 +78,14 @@ public class ViennaGeocoder implements Geocoder {
             return null;
         }
 
-        String query = buildQueryString(address);
+        String query = address.getStreet();
+        if (address.getNumber() != null) {
+            query += " " + address.getNumber();
+        }
+        if (address.getBlock() != null) {
+            query += " /" + address.getBlock();
+        }
+
         FeatureCollection result;
         try {
             LOG.trace("Vienna Geocoder requests coordinates of address from Vienna OGDAddressService.");
@@ -80,17 +101,15 @@ public class ViennaGeocoder implements Geocoder {
             return null;
         }
 
-        Feature feature = getMatch(address, result.getFeatures());
-        if (feature == null || !(feature.getGeometry() instanceof Point)) {
-            return null;
-        }
-
-        LngLatAlt coordinates = ((Point) feature.getGeometry()).getCoordinates();
-        return new AddressResult(address, request.getText(), new LatLng(coordinates.getLatitude(), coordinates.getLongitude()));
+        return result.getFeatures().stream()
+                .sorted(Comparator.nullsLast(Comparator.comparing(f -> f.getProperty("Ranking"))))
+                .map(feature -> buildPoint(parsed, feature))
+                .filter(point -> matchesRequest(parsed, point))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public AddressResult reverse(LatLng coordinates) {
+    public PointDto reverse(LatLng coordinates) {
         if (!BOUNDS.contains(coordinates)) {
             return null;
         }
@@ -110,65 +129,52 @@ public class ViennaGeocoder implements Geocoder {
 
         List<Feature> features = result.getFeatures();
         features.sort(Comparator.nullsLast(Comparator.comparing(f -> f.getProperty("Distance"))));
-        Address address = buildAddress(features.get(0));
+        Address address = buildAddress(features.get(0), Address.builder());
         double dist = features.get(0).getProperty("Distance");
         LOG.debug("Found address '{}' {} meters away with data.wien.gv.at", address, dist);
-        return new AddressResult(address, coordinates);
-    }
-
-    private String buildQueryString(Address address) {
-        String query = address.getStreet();
-        Address.Number number = address.getNumber();
-        if (number != null) {
-            if (number.getFrom() != null) {
-                query += " " + number.getFrom();
-                if (number.getTo() != null) {
-                    query += "-" + number.getTo();
-                } else if (number.getLetter() != null) {
-                    query += number.getLetter();
-                }
-                if (number.getBlock() != null) {
-                    query += "/" + number.getBlock();
-                }
-            }
-        }
-
-        return query;
-    }
-
-    private Feature getMatch(Address address, List<Feature> features) {
-        if (features.size() > 1) {
-            features.sort(Comparator.nullsLast(Comparator.comparing(f -> f.getProperty("Ranking"))));
-
-            for (Feature feature : features) {
-                // First run: Look for exact match
-                if (AddressMatcher.isFoundAddressMatching(buildAddress(feature), address, true)) {
-                    LOG.debug("Found an exactly matching address in the result set: {}.", feature);
-                    return feature;
-                }
-            }
-
-            for (Feature feature : features) {
-                // Second run: Look for bigger addresses containing the requested
-                if (AddressMatcher.isFoundAddressMatching(buildAddress(feature), address, false)) {
-                    LOG.debug("Found a matching address in the result set, with a different number: {}.", feature);
-                    return feature;
-                }
-            }
-        }
-
-        // Only one entry or no match found, use lowest ranking
-        LOG.trace("Check if single entry in returned information is matching by levenshtein distance.");
-        Feature feature = features.get(0);
-        return AddressMatcher.isStreetMatchingByLevenshtein(buildAddress(feature), address) ? feature : null;
-    }
-
-    private Address buildAddress(Feature feature) {
-        return Address.builder()
-                .street(feature.getProperty("StreetName"))
-                .number(AddressParser.parseNumber(feature.getProperty("StreetNumber")))
-                .postCode(AddressParser.parseInt(feature.getProperty("PostalCode")))
-                .city(feature.getProperty("Municipality"))
+        return PointDto.builder()
+                .address(address)
+                .coordinates(coordinates)
                 .build();
+    }
+
+    private Address buildAddress(Feature feature, AddressBuilder builder) {
+        builder
+                .street(feature.getProperty("StreetName"))
+                .postCode(AddressParser.parseInt(feature.getProperty("PostalCode")))
+                .city(feature.getProperty("Municipality"));
+
+        String numberString = feature.getProperty("StreetNumber");
+        if (numberString != null) {
+            String[] numberParts = numberString.split("/");
+            if (!numberParts[0].isEmpty()) {
+                builder.number(numberParts[0]);
+            }
+            if (numberParts.length > 1) {
+                builder.block(numberParts[1]);
+            }
+        }
+
+        return builder.build();
+    }
+
+    private PointDto buildPoint(PointDto request, Feature feature) {
+        if (feature == null) {
+            return null;
+        }
+
+        GeoJsonObject geometry = feature.getGeometry();
+        if (!(geometry instanceof Point)) {
+            return null;
+        }
+
+        LngLatAlt coordinates = ((Point) geometry).getCoordinates();
+        LatLng latlng = new LatLng(coordinates.getLatitude(), coordinates.getLongitude());
+        Address address = buildAddress(feature, request.getAddress().toBuilder());
+        return request.withAddress(address).withCoordinates(latlng);
+    }
+
+    private boolean matchesRequest(PointDto request, PointDto result) {
+        return result != null && AddressMatcher.isFoundAddressMatching(result.getAddress(), request.getAddress());
     }
 }

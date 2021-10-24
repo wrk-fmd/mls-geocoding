@@ -8,8 +8,8 @@ spring:
     password: mls-rabbitmq-pass
 application:
   geocoder:
+    name: gmaps
     priority: 3
-    requeue: false
   gmaps:
     api-key: !!REQUIRED!!
 logging:

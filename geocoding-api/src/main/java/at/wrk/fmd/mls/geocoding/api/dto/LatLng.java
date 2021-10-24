@@ -1,5 +1,6 @@
 package at.wrk.fmd.mls.geocoding.api.dto;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
  * A class for handling WGS84 coordinates
  */
 @Getter
-@NoArgsConstructor // For Jackson
+@NoArgsConstructor(access = AccessLevel.PRIVATE) // For Jackson
 @AllArgsConstructor
 public class LatLng {
 

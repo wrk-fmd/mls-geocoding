@@ -5,10 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import at.wrk.fmd.mls.geocoding.api.dto.AddressResult;
-import at.wrk.fmd.mls.geocoding.api.dto.GeocodingRequest;
-import at.wrk.fmd.mls.geocoding.api.dto.GeocodingResult;
 import at.wrk.fmd.mls.geocoding.api.dto.LatLng;
+import at.wrk.fmd.mls.geocoding.api.dto.PointDto;
 import at.wrk.fmd.mls.geocoding.config.MessageBrokerConfiguration;
 import at.wrk.fmd.mls.geocoding.service.GeocodingRequestListener;
 import org.junit.jupiter.api.Test;
@@ -17,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.List;
 
 // TODO Just inject what is really needed
 @ExtendWith(SpringExtension.class)
@@ -29,37 +29,37 @@ public class ViennaGeocoderTest {
 
     @Test
     public void addressWithCity() {
-        GeocodingRequest request = createRequest("Neubaugasse", "7/3", 1070, "Wien");
-        GeocodingResult result = geocoder.geocode(request);
-        assertCoordinates(new LatLng(48.199, 16.349), result.getCoordinates());
+        PointDto request = createRequest("Neubaugasse", "7/3", 1070, "Wien");
+        List<PointDto> result = geocoder.geocode(request);
+        assertCoordinates(new LatLng(48.199, 16.349), result.get(0).getCoordinates());
     }
 
     @Test
     public void addressWithoutPostalCode() {
-        GeocodingRequest request = createRequest("Neubaugasse", "7/3", null, null);
-        GeocodingResult result = geocoder.geocode(request);
-        assertCoordinates(new LatLng(48.199, 16.349), result.getCoordinates());
+        PointDto request = createRequest("Neubaugasse", "7/3", null, null);
+        List<PointDto> result = geocoder.geocode(request);
+        assertCoordinates(new LatLng(48.199, 16.349), result.get(0).getCoordinates());
     }
 
     @Test
     public void addressWithPostalCodeOutsideOfVienna_noResult() {
-        GeocodingRequest request = createRequest("Mozartstraße", "1", 4020, null);
-        GeocodingResult result = geocoder.geocode(request);
+        PointDto request = createRequest("Mozartstraße", "1", 4020, null);
+        List<PointDto> result = geocoder.geocode(request);
         assertNull(result);
     }
 
     @Test
     public void addressWithCityOutsideOfVienna_noResult() {
-        GeocodingRequest request = createRequest("Mozartstraße", "1", null, "Linz");
-        GeocodingResult result = geocoder.geocode(request);
+        PointDto request = createRequest("Mozartstraße", "1", null, "Linz");
+        List<PointDto> result = geocoder.geocode(request);
         assertNull(result);
     }
 
     @Test
     public void invalidAddressInVienna_noResult() {
-        GeocodingRequest request = createRequest("Invalid", "1", 1130, null);
-        GeocodingResult result = geocoder.geocode(request);
-        assertNull(result);
+        PointDto request = createRequest("Invalid", "1", 1130, null);
+        List<PointDto> result = geocoder.geocode(request);
+        assertTrue(result == null || result.isEmpty());
     }
 
     /**
@@ -67,15 +67,16 @@ public class ViennaGeocoderTest {
      */
     @Test
     public void testReverse() {
-        AddressResult result;
+        PointDto result;
 
         result = geocoder.reverse(new LatLng(48.202813, 16.342256));
         assertNotNull(result, "Expected a result at Kandlgasse, 1070");
         assertEquals("Kandlgasse", result.getAddress().getStreet());
         assertNotNull(result.getAddress().getPostCode(), "Expected a post code at Kandlgasse, 1070");
         assertEquals(1070, (int) result.getAddress().getPostCode());
-        Integer number = result.getAddress().getNumber().getFrom();
-        assertNotNull(number, "Expected a number at Kandlgasse, 1070");
+        String numberString = result.getAddress().getNumber();
+        assertNotNull(numberString, "Expected a number at Kandlgasse, 1070");
+        int number = Integer.parseInt(numberString);
         assertTrue(number >= 19 && number <= 24, "Expected number to be in range 19-24");
 
         result = geocoder.reverse(new LatLng(48.32, 16.19));
@@ -87,7 +88,7 @@ public class ViennaGeocoderTest {
         assertNull(result, "Expected no result for request at Pressbaum");
     }
 
-    private GeocodingRequest createRequest(final String street, final String number, final Integer postCode, final String city) {
+    private PointDto createRequest(final String street, final String number, final Integer postCode, final String city) {
         String request = String.format("%s %s\n", street, number);
         if (postCode != null) {
             request += postCode + " ";
@@ -95,7 +96,7 @@ public class ViennaGeocoderTest {
         if (city != null) {
             request += city;
         }
-        return new GeocodingRequest(request.trim());
+        return PointDto.builder().details(request.trim()).build();
     }
 
     private void assertCoordinates(final LatLng expected, final LatLng result) {

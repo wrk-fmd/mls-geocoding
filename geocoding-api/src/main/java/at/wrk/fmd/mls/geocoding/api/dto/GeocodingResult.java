@@ -1,25 +1,15 @@
 package at.wrk.fmd.mls.geocoding.api.dto;
 
-import static java.util.Objects.requireNonNull;
-
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @Getter
+@ToString
+@RequiredArgsConstructor
 public class GeocodingResult {
 
-    private String text;
-    private LatLng coordinates;
-
-    protected GeocodingResult() {
-    }
-
-    public GeocodingResult(String text, LatLng coordinates) {
-        this.text = requireNonNull(text, "The text for the geocoding result must not be null");
-        this.coordinates = requireNonNull(coordinates, "The coordinates for the geocoding result must not be null");
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s: %s", text, coordinates);
-    }
+    private final PointDto data;
+    private final String source;
+    private final int priority;
 }

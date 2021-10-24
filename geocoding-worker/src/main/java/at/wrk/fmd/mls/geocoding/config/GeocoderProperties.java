@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 public class GeocoderProperties {
 
     /**
-     * The priority order of the geocoder (lower is called earlier, first geocoder must have priority {@code null})
+     * The name of the geocoder
      */
-    private Integer priority;
+    private String name;
 
     /**
-     * Whether the request should be re-queued for the next geocoder if resolving failed
+     * The priority of the geocoder
      */
-    private boolean requeue;
+    private int priority;
 }

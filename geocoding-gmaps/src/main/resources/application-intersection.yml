@@ -2,6 +2,7 @@
 
 application:
   geocoder:
-    priority: 1
-    requeue: true
+    name: gmaps-intersection
+    priority: 2
+  gmaps:
     type: intersection

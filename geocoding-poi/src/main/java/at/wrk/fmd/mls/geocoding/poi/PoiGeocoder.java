@@ -1,8 +1,7 @@
 package at.wrk.fmd.mls.geocoding.poi;
 
-import at.wrk.fmd.mls.geocoding.api.dto.GeocodingRequest;
-import at.wrk.fmd.mls.geocoding.api.dto.GeocodingResult;
 import at.wrk.fmd.mls.geocoding.api.dto.LatLng;
+import at.wrk.fmd.mls.geocoding.api.dto.PointDto;
 import at.wrk.fmd.mls.geocoding.service.Geocoder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +18,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Objects;
@@ -33,17 +34,17 @@ public class PoiGeocoder implements Geocoder {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ObjectMapper mapper;
-    private final NavigableMap<String, GeocodingResult> values;
+    private final NavigableMap<String, PointDto> values;
 
     public PoiGeocoder(ObjectMapper mapper, PoiProperties properties) {
         this.mapper = mapper;
         values = properties.getSources().entrySet().stream()
                 .flatMap(e -> loadFeatureCollection(e.getKey(), e.getValue()))
-                .collect(Collectors.toMap(r -> getKey(r.getText()), Function.identity(), (a, b) -> a, TreeMap::new));
+                .collect(Collectors.toMap(r -> getKey(r.getPoi()), Function.identity(), (a, b) -> a, TreeMap::new));
         LOG.debug("Loaded {} POI entries", values.size());
     }
 
-    private Stream<GeocodingResult> loadFeatureCollection(Resource source, String prefix) {
+    private Stream<PointDto> loadFeatureCollection(Resource source, String prefix) {
         LOG.debug("Reading POI features from {}", source);
 
         try (InputStream inputStream = source.getInputStream()) {
@@ -59,7 +60,7 @@ public class PoiGeocoder implements Geocoder {
         }
     }
 
-    private GeocodingResult getPoi(Feature feature, String prefix) {
+    private PointDto getPoi(Feature feature, String prefix) {
         GeoJsonObject geometry = feature.getGeometry();
         if (!(geometry instanceof Point)) {
             return null;
@@ -75,7 +76,11 @@ public class PoiGeocoder implements Geocoder {
             return null;
         }
 
-        return new GeocodingResult(prefix + text, new LatLng(coordinates.getLatitude(), coordinates.getLongitude()));
+        // TODO Parse address contained in POI text
+        return PointDto.builder()
+                .poi(prefix + text)
+                .coordinates(new LatLng(coordinates.getLatitude(), coordinates.getLongitude()))
+                .build();
     }
 
     private String getKey(String text) {
@@ -83,21 +88,39 @@ public class PoiGeocoder implements Geocoder {
     }
 
     @Override
-    public GeocodingResult geocode(GeocodingRequest request) {
-        if (StringUtils.isBlank(request.getText())) {
+    public List<PointDto> geocode(PointDto request) {
+        if (request.getPoi() != null) {
+            // Already have a POI entry, try to extend to full entry
+            PointDto match = values.get(getKey(request.getPoi()));
+            if (match == null) {
+                return null;
+            }
+
+            PointDto result = match.withDetails(StringUtils.trimToNull(request.getDetails()));
+            return Collections.singletonList(result);
+        }
+
+        if (request.getDetails() == null) {
             return null;
         }
 
-        String query = getKey(request.getText());
-
-        GeocodingResult exact = values.get(query);
-        if (exact != null) {
-            return exact;
+        String queryString = StringUtils.trimToNull(getKey(request.getDetails()));
+        if (queryString == null) {
+            return null;
         }
 
-        // Get the last entry before the queried one
-        Entry<String, GeocodingResult> entry = values.floorEntry(query);
-        return (entry != null && query.startsWith(entry.getKey())) ? entry.getValue() : null;
+        // TODO We probably want more sophisticated matching here, e.g. partial inner matches, separate line matching
+
+        // Get everything that starts with the given query string
+        // e.g., if query string is "foo", this will return everything in the range ["foo", "fop"[
+//        char lastChar = queryString.charAt(queryString.length() - 1);
+//        String queryEnd = queryString.substring(0, queryString.length() - 1) + (char) (lastChar + 1);
+//        return new ArrayList<>(values.subMap(queryString, queryEnd).values());
+
+        return values.entrySet().stream()
+                .filter(e -> e.getKey().contains(queryString))
+                .map(Entry::getValue)
+                .collect(Collectors.toList());
     }
 
     // TODO Also allow reverse geocoding

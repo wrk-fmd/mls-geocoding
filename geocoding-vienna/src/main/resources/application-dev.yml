@@ -6,7 +6,6 @@ spring:
 application:
   geocoder:
     priority: 2
-    requeue: true
 logging:
   level:
     root: info

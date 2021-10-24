@@ -1,7 +1,6 @@
 package at.wrk.fmd.mls.geocoding.gmaps;
 
 import at.wrk.fmd.mls.geocoding.api.dto.Address;
-import at.wrk.fmd.mls.geocoding.api.dto.Address.Number;
 import com.google.maps.GeoApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.lang.invoke.MethodHandles;
 
 @Component
-@ConditionalOnProperty(prefix = "application.geocoder", name = "type", havingValue = "default", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "application.gmaps", name = "type", havingValue = "regular", matchIfMissing = true)
 public class GmapsGeocoder extends AbstractGmapsGeocoder {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -24,28 +23,20 @@ public class GmapsGeocoder extends AbstractGmapsGeocoder {
 
     @Override
     protected String buildQueryString(Address address) {
+        if (address.getIntersection() != null) {
+            LOG.trace("Address '{}' has an intersection set, which this service does not handle.", address);
+            return null;
+        }
+
         if (address.getStreet() == null) {
-            LOG.trace("Address '{}' does not have an address set. Cannot build query for geocode.", address);
+            LOG.trace("Address '{}' does not have a street set. Cannot build query for geocode.", address);
             return null;
         }
 
         String query = address.getStreet();
-        Number number = address.getNumber();
-        if (number != null) {
-            if (number.getFrom() != null) {
-                query += " " + number.getFrom();
-                if (number.getTo() != null) {
-                    query += "-" + number.getTo();
-                } else if (number.getLetter() != null) {
-                    query += number.getLetter();
-                }
-            }
+        if (address.getNumber() != null) {
+            query += " " + address.getNumber();
         }
-
-        if (address.getCity() != null) {
-            query += ", " + address.getCity();
-        }
-
-        return query;
+        return appendCityQuery(query, address);
     }
 }

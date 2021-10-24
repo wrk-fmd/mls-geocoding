@@ -1,133 +1,103 @@
 package at.wrk.fmd.mls.geocoding.util;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
-import static org.apache.commons.lang3.StringUtils.upperCase;
 
 import at.wrk.fmd.mls.geocoding.api.dto.Address;
 import at.wrk.fmd.mls.geocoding.api.dto.Address.AddressBuilder;
-import at.wrk.fmd.mls.geocoding.api.dto.Address.Number;
-import at.wrk.fmd.mls.geocoding.api.dto.Address.Number.NumberBuilder;
+import at.wrk.fmd.mls.geocoding.api.dto.PointDto;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AddressParser {
 
-    // TODO Maybe these Regexes can be cleaned up a little
-    private static final Pattern STREET_PATTERN = Pattern.compile("^(\\w[\\w\\s\\-.]*?)"
-            + "( ([1-9]\\d*(-([1-9]\\d*)|[a-zA-Z])?)?(/.*)?)?( # (\\w[\\w\\s\\-.]*))?$", Pattern.UNICODE_CHARACTER_CLASS);
-    private static final Pattern CITY_PATTERN = Pattern
-            .compile("^(([1-9]\\d{3,4}) )?(\\w[\\w\\s\\-.]*)$", Pattern.UNICODE_CHARACTER_CLASS);
-    private static final Pattern NUMBER_PARTS = Pattern.compile("([1-9]\\d*)(-([1-9]\\d*)|[a-zA-Z])?");
+    private static final Pattern STREET_PATTERN = Pattern.compile("^"
+            // Group 1: Street name (non-greedy)
+            + "(\\w[\\w\\s\\-.]*?)"
+            // Group 2: Optional number sequence
+            + "( "
+            // Group 3: Optional house number (may include range or letter suffix in group 4)
+            + "([1-9]\\d*(-[1-9]\\d*|[a-zA-Z])?)?"
+            // Group 5+6: Block starts with "/", then can contain everything up to the next "/"
+            + "(/([^/]*))?"
+            // Group 7+8: Number details start with "/", then contain everything until the end of the line
+            + "(/(.*))?"
+            // End number sequence
+            + ")?"
+            // Group 9+10: Optional intersection starts with " # ", then street pattern as before
+            + "( # (\\w[\\w\\s\\-.]*))?"
+            // Match full line
+            + "$", Pattern.UNICODE_CHARACTER_CLASS);
 
-    public static Address parseFromString(final String addressString) {
-        if (StringUtils.isBlank(addressString)) {
-            return null;
+    private static final Pattern CITY_PATTERN = Pattern.compile("^"
+            // Group 1: Post code
+            + "([1-9]\\d{3,4})?"
+            // Whitespace between post code and city, if both are given
+            + " ?"
+            // Group 2: City
+            + "(\\w[\\w\\s\\-.]*)?"
+            // Match full line
+            + "$", Pattern.UNICODE_CHARACTER_CLASS);
+
+//	private static final Pattern NUMBER_PARTS = Pattern.compile("([1-9]\\d*)(-([1-9]\\d*)|[a-zA-Z])?");
+
+    public static PointDto parseAddress(final PointDto request) {
+        if (request.getAddress() != null) {
+            // Address already parsed, do nothing
+            return request;
         }
 
-        String[] lines = addressString.trim().split("\n");
+        String details = trimToNull(request.getDetails());
+        if (details == null) {
+            // Nothing to parse
+            return request.withDetails(null);
+        }
+
+        String[] lines = details.split("\n");
         if (lines.length < 1) {
             // This should never happen, but keep it in case something above changes
-            return null;
+            return request;
         }
 
         for (int i = 0; i < lines.length; i++) {
             lines[i] = lines[i].trim();
         }
 
-        AddressBuilder builder = Address.builder();
-        Matcher street0 = STREET_PATTERN.matcher(lines[0]);
-        if (lines.length == 1) {
-            if (street0.find(0)) {
-                // First (and only) line represents street
-                setFromRegex(builder, street0, null);
-            } else {
-                // Use as title (e.g. POI)
-                builder.title(lines[0]);
-            }
-        } else {
-            Matcher street1 = STREET_PATTERN.matcher(lines[1]);
-            Matcher city1 = CITY_PATTERN.matcher(lines[1]);
-            Matcher city2 = lines.length >= 3 ? CITY_PATTERN.matcher(lines[2]) : null;
-            int additionalStart;
-
-            if (city2 != null && street1.find(0) && city2.find(0)) {
-                // Second line is street, third is city
-                builder.title(lines[0]);
-                setFromRegex(builder, street1, city2);
-                additionalStart = 3;
-            } else if (street0.find(0) && city1.find(0)) {
-                // First line is street, second is city
-                setFromRegex(builder, street0, city1);
-                additionalStart = 2;
-            } else if (street1.find(0)) {
-                // Second line is street
-                builder.title(lines[0]);
-                setFromRegex(builder, street1, null);
-                additionalStart = 2;
-            } else if (street0.find(0)) {
-                // First line is street
-                setFromRegex(builder, street0, null);
-                additionalStart = 1;
-            } else {
-                builder.title(lines[0]);
-                additionalStart = 1;
-            }
-
-            builder.additional(String.join("\n", Arrays.copyOfRange(lines, additionalStart, lines.length)).trim());
+        // Simpler parsing then before: First line is street, optional second line is city, further lines are details
+        // There is no title line in non-POI entries
+        Matcher street = STREET_PATTERN.matcher(lines[0]);
+        if (!street.find(0)) {
+            // First line does not match street, use (trimmed) original details
+            return request.withDetails(details);
         }
 
-        return builder.build();
-    }
+        // Set parsed street data
+        AddressBuilder builder = Address.builder()
+                .street(trimToNull(street.group(1)))
+                .number(trimToNull(street.group(3)))
+                .block(trimToNull(street.group(6)))
+                .details(trimToNull(street.group(8)))
+                .intersection(trimToNull(street.group(10)));
 
-    private static void setFromRegex(AddressBuilder builder, Matcher street, Matcher city) {
-        if (street != null) {
-            builder.street(trimToNull(street.group(1)));
-            builder.number(parseNumber(trimToNull(street.group(2))));
-            builder.intersection(trimToNull(street.group(8)));
-        }
-        if (city != null) {
-            builder.postCode(parseInt(city.group(2)));
-            builder.city(trimToNull(city.group(3)));
-        }
-    }
-
-    public static Number parseNumber(String number) {
-        NumberBuilder builder = Number.builder();
-        if (number == null) {
-            return builder.build();
+        if (lines.length <= 1) {
+            // No more lines: We are done and have no details block
+            return request.withAddress(builder.build()).withDetails(null);
         }
 
-        String[] components = number.split("/", 3);
-        if (components.length >= 3) {
-            builder.details(trimToNull(components[2]));
-        }
-        if (components.length >= 2) {
-            builder.block(trimToNull(components[1]));
-        }
-        if (components.length >= 1) {
-            if (!components[0].isBlank()) {
-                Matcher matcher = NUMBER_PARTS.matcher(components[0].trim());
-                if (matcher.find()) {
-                    Integer parsedFrom = parseInt(matcher.group(1));
-                    if (parsedFrom != null) {
-                        builder.from(parsedFrom);
-                        Integer parsedTo = parseInt(matcher.group(3));
-                        if (parsedTo == null) {
-                            // No to for range given, try with a letter
-                            builder.letter(trimToNull(upperCase(matcher.group(2))));
-                        } else if (parsedTo > parsedFrom || parsedTo % 2 == parsedFrom % 2) {
-                            // Valid interval
-                            builder.to(parsedTo);
-                        }
-                    }
-                }
-            }
+        // Now try to parse a city from the second line
+        int detailsStart = 1;
+        Matcher city = CITY_PATTERN.matcher(lines[1]);
+        if (city.find(0)) {
+            builder.postCode(parseInt(city.group(1)));
+            builder.city(trimToNull(city.group(2)));
+            detailsStart = 2;
         }
 
-        return builder.build();
+        String remainingDetails = trimToNull(Arrays.stream(lines).skip(detailsStart).collect(Collectors.joining("\n")));
+        return request.withAddress(builder.build()).withDetails(remainingDetails);
     }
 
     public static Integer parseInt(String str) {

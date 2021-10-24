@@ -1,8 +1,8 @@
 package at.wrk.fmd.mls.geocoding.gmaps;
 
 import at.wrk.fmd.mls.geocoding.api.dto.Address;
-import at.wrk.fmd.mls.geocoding.api.dto.AddressResult;
 import at.wrk.fmd.mls.geocoding.api.dto.LatLng;
+import at.wrk.fmd.mls.geocoding.api.dto.PointDto;
 import com.google.maps.GeoApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.lang.invoke.MethodHandles;
 
 @Component
-@ConditionalOnProperty(prefix = "application.geocoder", name = "type", havingValue = "intersection")
+@ConditionalOnProperty(prefix = "application.gmaps", name = "type", havingValue = "intersection")
 public class GmapsIntersectionGeocoder extends AbstractGmapsGeocoder {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -31,15 +31,11 @@ public class GmapsIntersectionGeocoder extends AbstractGmapsGeocoder {
         }
 
         String query = String.format("%s and %s", address.getStreet(), address.getIntersection());
-        if (address.getCity() != null) {
-            query += ", " + address.getCity();
-        }
-
-        return query;
+        return appendCityQuery(query, address);
     }
 
     @Override
-    public AddressResult reverse(LatLng coordinates) {
+    public PointDto reverse(LatLng coordinates) {
         LOG.trace("Reverse geocoding is not supported by GmapsIntersectionGeocoder.");
         return null;
     }
