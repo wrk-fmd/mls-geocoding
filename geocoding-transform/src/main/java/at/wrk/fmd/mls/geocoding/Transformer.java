@@ -1,6 +1,5 @@
 package at.wrk.fmd.mls.geocoding;
 
-import at.wrk.fmd.mls.geocoding.api.dto.GeocodingResult;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.geojson.Feature;
@@ -16,10 +15,10 @@ public class Transformer {
         ObjectMapper mapper = new ObjectMapper();
 
         for (String path : args) {
-            GeocodingResult[] results = mapper.readValue(new File(path), GeocodingResult[].class);
+            PoiDto[] results = mapper.readValue(new File(path), PoiDto[].class);
 
             FeatureCollection collection = new GeoToolCollection("Generated from " + args[0]);
-            for (GeocodingResult result : results) {
+            for (PoiDto result : results) {
                 Feature feature = new Feature();
                 feature.setProperty("text", result.getText());
 
