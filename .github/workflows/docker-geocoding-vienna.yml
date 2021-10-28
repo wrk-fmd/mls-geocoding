@@ -1,0 +1,26 @@
+name: Build geocoding-vienna Docker image
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - .github/workflows/docker-geocoding-vienna.yml
+      - geocoding-api/**
+      - geocoding-vienna/**
+      - geocoding-worker/**
+      - pom.xml
+      - Dockerfile
+
+jobs:
+  deploy:
+    uses: wrk-fmd/mls-packages/.github/workflows/docker-build.yml@main
+    with:
+      PROJECT_MODULE: geocoding-vienna
+      PROJECT_APP: geocoding-vienna
+      DOCKER_NAME: wrkfmdit/geocoding-vienna
+    secrets:
+      MLS_PACKAGES_TOKEN: ${{ secrets.MLS_PACKAGES_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
