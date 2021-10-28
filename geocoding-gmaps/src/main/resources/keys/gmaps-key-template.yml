@@ -1,0 +1,5 @@
+# Copy this to gmaps-key.yml and set the API key
+
+application:
+  gmaps:
+    api-key: !!REQUIRED!!

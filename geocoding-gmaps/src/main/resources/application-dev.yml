@@ -1,5 +1,3 @@
-# Copy this to application-dev.yml and set the API key
-
 spring:
   rabbitmq:
     host: localhost
@@ -9,8 +7,6 @@ application:
   geocoder:
     name: gmaps
     priority: 3
-  gmaps:
-    api-key: !!REQUIRED!!
 logging:
   level:
     root: info

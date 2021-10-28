@@ -1,3 +1,0 @@
-# Ignore the config YAML files, because they contain the Google Maps API key
-application-dev.yml
-application-docker.yml

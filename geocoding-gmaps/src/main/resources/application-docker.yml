@@ -1,5 +1,4 @@
 # This profile uses the docker-compose DNS names and is activated for the default docker-compose build
-# Copy it to application-docker.yml and set the Google Maps API key
 
 spring:
   rabbitmq:
@@ -10,8 +9,6 @@ application:
   geocoder:
     name: gmaps
     priority: 3
-  gmaps:
-    api-key: !!REQUIRED!!
 logging:
   config: /config/log-docker.xml
   level:

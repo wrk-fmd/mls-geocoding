@@ -1,6 +1,8 @@
 spring:
   profiles:
     active: dev
+  config:
+    import: keys/gmaps-key.yml
 logging:
   level:
     root: warn
