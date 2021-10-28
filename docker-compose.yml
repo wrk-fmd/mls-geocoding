@@ -11,6 +11,8 @@ services:
       network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker
+    tmpfs:
+      - /tmp
     volumes:
       - type: bind
         source: ${MLS_GEOCODING_POI_CONFIG:-./geocoding-poi/src/main/resources}
@@ -30,6 +32,8 @@ services:
       network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker
+    tmpfs:
+      - /tmp
     volumes:
       - type: bind
         source: ${MLS_GEOCODING_VIENNA_CONFIG:-./geocoding-vienna/src/main/resources}
@@ -49,6 +53,8 @@ services:
       network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker
+    tmpfs:
+      - /tmp
     volumes:
       - type: bind
         source: ${MLS_GEOCODING_GMAPS_CONFIG:-./geocoding-gmaps/src/main/resources}
@@ -68,6 +74,8 @@ services:
       network: host
     environment:
       SPRING_PROFILES_ACTIVE: docker,intersection
+    tmpfs:
+      - /tmp
     volumes:
       - type: bind
         source: ${MLS_GEOCODING_INTERSECTION_CONFIG:-./geocoding-gmaps/src/main/resources}
