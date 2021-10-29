@@ -8,9 +8,9 @@ application:
     priority: 1
   poi:
     sources:
-      ehs.json: EHS
-      hospitals.json:
-      wrk.json:
+      '[pois/ehs.json]': EHS
+      '[pois/hospitals.json]':
+      '[pois/wrk.json]':
 logging:
   level:
     root: info

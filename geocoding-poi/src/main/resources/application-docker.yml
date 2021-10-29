@@ -10,9 +10,9 @@ application:
     priority: 1
   poi:
     sources:
-      '[file:/config/ehs.json]': EHS
-      '[file:/config/hospitals.json]':
-      '[file:/config/wrk.json]':
+      '[file:/config/pois/ehs.json]': EHS
+      '[file:/config/pois/hospitals.json]':
+      '[file:/config/pois/wrk.json]':
 logging:
   config: /config/log-docker.xml
   level:
